@@ -1,0 +1,71 @@
+CREATE DATABASE IF NOT EXISTS estoque_pedidos
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE estoque_pedidos;
+
+CREATE TABLE IF NOT EXISTS products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  sku VARCHAR(60) NULL,
+  name VARCHAR(180) NOT NULL,
+  unit VARCHAR(30) NOT NULL DEFAULT 'un',
+  stock_qty DECIMAL(10,2) NOT NULL DEFAULT 0,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  seller_name VARCHAR(120) NOT NULL,
+  notes TEXT NULL,
+  priority VARCHAR(20) NOT NULL DEFAULT 'normal',
+  internal_note TEXT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'novo',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS order_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  product_id INT NOT NULL,
+  quantity DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS sellers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS order_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  event_type VARCHAR(40) NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO products (sku, name, unit, stock_qty)
+SELECT 'REF001', 'Produto exemplo 1', 'un', 20
+WHERE NOT EXISTS (SELECT 1 FROM products LIMIT 1);
+
+INSERT INTO products (sku, name, unit, stock_qty)
+SELECT 'REF002', 'Produto exemplo 2', 'cx', 8
+WHERE (SELECT COUNT(*) FROM products) = 1;
+
+INSERT INTO products (sku, name, unit, stock_qty)
+SELECT 'REF003', 'Produto exemplo 3', 'pct', 15
+WHERE (SELECT COUNT(*) FROM products) = 2;
+
+INSERT INTO sellers (name)
+SELECT 'Vendedora 1'
+WHERE NOT EXISTS (SELECT 1 FROM sellers LIMIT 1);
+
+INSERT INTO sellers (name)
+SELECT 'Vendedora 2'
+WHERE (SELECT COUNT(*) FROM sellers) = 1;
